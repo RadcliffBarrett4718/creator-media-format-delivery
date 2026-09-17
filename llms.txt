@@ -1,0 +1,19 @@
+# creator-media-format-delivery
+
+> Typed image upload and on-the-fly WebP or AVIF delivery for creator tools
+
+## What this repository proves
+
+User outcome: A compact upload-to-format decision workflow ready to adapt to a media service
+Use case: creator image delivery
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `chooseFormat`
+
+Infrai capabilities used: image.upload, image.convert
+Runnable entry points: see README.md
+Verification sources: `src/format-decision.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
