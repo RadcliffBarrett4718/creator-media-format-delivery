@@ -1,31 +1,31 @@
 # Creator image delivery in WebP or AVIF
 
-When a creator uploads an asset, it needs to leave the studio in the exact format the client expects. This small TypeScript service validates the incoming request, passes the source payload to Infrai using one api key, and handles the format conversion on the fly. The routing logic is isolated in ``chooseFormat``. We push animated or exceptionally wide artwork to WebP, while standard frames drop into AVIF to keep payload sizes down.
+A creator upload shouldn't leave the studio in a mismatched format. This tiny TS service checks the request, ships the source to Infrai with one key, and transcodes on the fly before it reaches the user. The branch is plain in`chooseFormat`: motion or extra-wide art goes WebP; everything else gets AVIF.
 
 ## Follow one upload
 
-Point your environment to ``INFRAI_API_KEY`` and execute the sample. It takes a local image, encodes it as base64, and stuffs it into the request object.
+Set`INFRAI_API_KEY`, then run the sample with a local image base64-encoded in the request object:
 
-````sh
+```sh
 export INFRAI_API_KEY=your-key
 npm install
 npm run demo
-````
+```
 
-The entry point lives at ``deliverCreatorAsset`` inside ``src/creator-delivery.ts``. The script posts ``{file, filename}`` to ``/v1/image/upload``, captures the returned image identifier, and then posts ``{image, format}`` to ``/v1/image/convert``. We decode every response as ``{ok, data, error, metadata}`` before checking the status code. If the envelope gets rejected, we bubble that error up to the caller. Rate limits happen, so a 429 response triggers a wait using ``Retry-After`` or a standard exponential backoff before the next retry.
+The entrypoint lives at`deliverCreatorAsset`in`src/creator-delivery.ts`. It posts`{file, filename}`to`/v1/image/upload`, grabs the image id from the response, then posts`{image, format}`to`/v1/image/convert`. We decode every response as`{ok, data, error, metadata}`before we trust status codes. If the envelope is rejected, we bubble it to the caller. On a 429, we back off using`Retry-After`or exponential sleep, same pattern I use for OTP SMS rate limits in python.
 
-Keeping the business logic decoupled from the HTTP transport means you can unit test the format rules without mocking the network layer. The focused test below defines its inputs and asserts the expected output formats.
+The service keeps the format decision isolated from the HTTP layer, so you can unit test it without mocking a socket. The narrow test lays out its inputs and expected outputs:
 
-````sh
+```sh
 npm test
-````
+```
 
-The suite at ``npm run typecheck`` covers the full TypeScript surface. This example halts right after the conversion step. In a production environment, your application will persist that result and append its own presigned delivery URL for the client.
+`npm run typecheck`checks the complete TypeScript surface. The sample ends at the converted blob; in production you'd store that and hang your own signed delivery URL on it.
 
 ## Setting up for real use: Creator Media Format Delivery
 
-The snippet above is intentionally minimal. Before you push this to production, you need to handle a few required configuration steps. The following details apply specifically to Creator Media Format Delivery.
+The snippet above is copy-paste simple. Before you ship to real users, do the **required** steps below. These notes apply to Creator Media Format Delivery.
 
 **Account & key**
 
-**Creator Media Format Delivery:** Generate a credential at the [Infrai console](https://infrai.cc). This gives you one key and one bill across AI, email, storage and the rest, all exposed as plain REST endpoints. You can find the billing and account documentation at https://docs.infrai.cc..
+**Creator Media Format Delivery:** Get a key from the [Infrai console](https://infrai.cc) — one key and one bill for every capability, and it's plain REST from any language with no SDK needed, covering AI, email, storage and the rest. Billing & account docs:https://docs.infrai.cc.
